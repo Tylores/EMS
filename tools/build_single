@@ -1,0 +1,12 @@
+export AJ_ROOT=$HOME/src/alljoyn
+export OS=linux
+export CPU=x86
+export LD_LIBRARY_PATH=$AJ_ROOT/build/$OS/$CPU/debug/dist/cpp/lib:$LD_LIBRARY_PATH
+
+make EMS
+make DMS
+
+x-terminal-emulator -e bin/Debug/EMS
+x-terminal-emulator -e bin/Debug/DMS
+
+echo All done
