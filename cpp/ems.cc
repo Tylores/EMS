@@ -34,6 +34,9 @@
 #include <sstream>
 #include <ctime>
 #include <algorithm>
+#include <map>
+#include <chrono>
+#include <thread>
 
 #include <alljoyn/Status.h>
 #include <alljoyn/BusAttachment.h>
@@ -50,18 +53,6 @@ using namespace qcc;
 
 Utility tools;
 
-struct Properties{
-    string device, region, feeder;
-    double importPower, importEnergy, importChar;
-    double exportPower, exportEnergy, exportChar;
-    double timestamp;
-} // END PROPERTIES
-
-    m_importWattHours, m_exportWattHours,m_importWatts, m_exportWatts, m_importChar, m_exportChar, m_idleChar;
-struct Properties{
-
-}
-
 /* convenience class that hides all the marshalling boilerplate from sight */
 class AssetProxy {
     ProxyBusObject proxy;
@@ -70,7 +61,9 @@ class AssetProxy {
     /* Private assigment operator - does nothing */
     AssetProxy operator=(const AssetProxy&);
   public:
-    AssetProxy(ProxyBusObject proxy, BusAttachment& bus) : proxy(proxy), bus(bus) {
+    map<string,double> properties;
+
+    AssetProxy(ProxyBusObject proxy, BusAttachment& bus) : proxy(proxy), bus(bus){
         proxy.EnablePropertyCaching();
     }
 
@@ -94,11 +87,33 @@ class AssetProxy {
         return status;
     }
 
+    void pathDelim(){
+        vector <string> path, temp;
+        int num;
+        double val;
+        path = tools.stringDelim(proxy.GetPath().c_str(),'/');
+        num = path.size();
+        for (int i = 0; i < num; i++){
+            if (path[i].find("region") == 0){
+                temp = tools.stringDelim(path[i],'_');
+                val = stod(temp[1]);
+                properties.insert(pair<string,double>("region",val));
+            } else if (path[i].find("feeder") == 0){
+                temp = tools.stringDelim(path[i],'_');
+                val = stod(temp[1]);
+                properties.insert(pair<string,double>("feeder",val));
+            }
+        } // end string comparison
+    } // END PATH DELIM
+
     void telemetry() {
+        properties.clear();
         cout << "Polling asset telemetry " << endl;
         MsgArg dict;
+
         QStatus status = proxy.GetAllProperties(INTF_NAME, dict);
         if (ER_OK == status){
+            pathDelim();
             MsgArg * entries = NULL;
             size_t num = 0;
             dict.Get("a{sv}", &num, &entries);
@@ -107,40 +122,18 @@ class AssetProxy {
                 double val;
                 status = entries[i].Get("{sd}", &key, &val);
                 if (ER_OK == status) {
-                    if (!strcmp(key,"time")){
-                        time_t t = val;
-                        cout << key << ": " << asctime(localtime(&t)) << endl;
-                    } else {
-                        cout << key << " : " << val << endl;
-                    }
+                    properties.insert(pair<string,double>(key,val));
                 }
             }
         }
-    }
+    } // END TELEMETRY
 
-    void pathDelim(){
-        string device, region, feeder;
-        vector <string> path, temp;
-        int num;
-
-        path = tools.stringDelim(proxy.GetPath().c_str(),'/');
-        num = path.size();
-        for (int i = 0; i < num; i++){
-            if (path[i].find("asset") == 0){
-                device = path[i];
-                temp = tools.stringDelim(device,'_');
-                device = temp[1];
-            } else if (path[i].find("region") == 0){
-                region = path[i];
-                temp = tools.stringDelim(region,'_');
-                region = temp[1];
-            } else if (path[i].find("feeder") == 0){
-                feeder = path[i];
-                temp = tools.stringDelim(feeder,'_');
-                feeder = temp[1];
-            }
-        } // end string comparison
-    } // END PATH DELIM
+    void printTelemetry() {
+        for(auto it = properties.cbegin(); it != properties.cend(); ++it)
+        {
+            cout << it->first << " " << it->second << endl;
+        }
+    } // END PRINT TELEMETRY
 };
 
 static void Help()
@@ -150,6 +143,8 @@ static void Help()
     cout << "t                  print telemetry" << endl;
     cout << "i <int watts>      import power signal" << endl;
     cout << "e <int watts>      export power signal" << endl;
+    cout << "x <int watts>      import power test" << endl;
+    cout << "y <int watts>      export power test" << endl;
     cout << "h                  display this help message" << endl;
 }
 
@@ -171,6 +166,7 @@ static void Telemetry(BusAttachment& bus, Observer* observer)
         AssetProxy asset(proxy, bus);
         cout << proxy.GetUniqueName() << ":" << proxy.GetPath() << endl;
         asset.telemetry();
+        asset.printTelemetry();
     }
 }
 
@@ -185,6 +181,66 @@ static void CallImportPower(BusAttachment& bus, Observer* observer, double t_wat
             continue;
         }
     }
+}
+
+static void TestImport(BusAttachment& bus, Observer* observer, double t_watts)
+{
+    QStatus status;
+    ProxyBusObject proxy = observer->GetFirst();
+    for (; proxy.IsValid(); proxy = observer->GetNext(proxy)) {
+        if (!strcmp(proxy.GetPath().c_str(),"/asset_bess/region_1/feeder_1")){
+            AssetProxy asset(proxy, bus);
+            asset.telemetry();
+            while (asset.properties["import_energy"] >= 0){
+                cout << "The import energy is: " << asset.properties["import_energy"] << endl;
+                status = asset.ImportPower(t_watts);
+                if (ER_OK != status) {
+                    cerr << "Could not set desired import power " << proxy.GetUniqueName() << ":" << proxy.GetPath() << endl;
+                    continue;
+                }
+                // wait one hour and then tell the system to stop with a zero signal.
+                this_thread::sleep_for(chrono::seconds(10));
+
+                status = asset.ImportPower(0);
+                if (ER_OK != status) {
+                    cerr << "Could not set desired import power " << proxy.GetUniqueName() << ":" << proxy.GetPath() << endl;
+                    continue;
+                }
+                asset.telemetry();
+            }
+        }
+    }
+    cout <<"/n/n/n****TEST COMPLETE****/n/n/n";
+}
+
+static void TestExport(BusAttachment& bus, Observer* observer, double t_watts)
+{
+    QStatus status;
+    ProxyBusObject proxy = observer->GetFirst();
+    for (; proxy.IsValid(); proxy = observer->GetNext(proxy)) {
+        if (!strcmp(proxy.GetPath().c_str(),"/asset_bess/region_1/feeder_1")){
+            AssetProxy asset(proxy, bus);
+            asset.telemetry();
+            while (asset.properties["export_energy"] >= 0){
+                cout << "The export energy is: " << asset.properties["export_energy"] << endl;
+                status = asset.ExportPower(t_watts);
+                if (ER_OK != status) {
+                    cerr << "Could not set desired export power " << proxy.GetUniqueName() << ":" << proxy.GetPath() << endl;
+                    continue;
+                }
+                // wait one hour and then tell the system to stop with a zero signal.
+                this_thread::sleep_for(chrono::seconds(10));
+
+                status = asset.ExportPower(0);
+                if (ER_OK != status) {
+                    cerr << "Could not set desired export power " << proxy.GetUniqueName() << ":" << proxy.GetPath() << endl;
+                    continue;
+                }
+                asset.telemetry();
+            }
+        }
+    }
+    cout <<"/n/n/n****TEST COMPLETE****/n/n/n";
 }
 
 static void CallExportPower(BusAttachment& bus, Observer* observer, double t_watts)
@@ -235,10 +291,6 @@ static bool Parse(BusAttachment& bus, Observer* observer, const string & input)
         Telemetry(bus, observer);
         break;
 
-    case 'f':
-        FilterPath(bus, observer);
-        break;
-
     case 'i':
         if (tokens.size() < 2) {
             Help();
@@ -257,6 +309,23 @@ static bool Parse(BusAttachment& bus, Observer* observer, const string & input)
         CallExportPower(bus, observer,stod(option));
         break;
 
+    case 'x':
+        if (tokens.size() < 2) {
+            Help();
+            break;
+        }
+        option = tokens.at(1);
+        TestImport(bus, observer,stod(option));
+        break;
+
+    case 'y':
+        if (tokens.size() < 2) {
+            Help();
+            break;
+        }
+        option = tokens.at(1);
+        TestExport(bus, observer,stod(option));
+        break;
     case 'h':
     default:
         Help();

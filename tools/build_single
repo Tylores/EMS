@@ -1,8 +1,9 @@
-export AJ_ROOT=$HOME/src/alljoyn
+export AJ_ROOT=$HOME/Src/alljoyn_src/core/alljoyn
 export OS=linux
 export CPU=x86
 export LD_LIBRARY_PATH=$AJ_ROOT/build/$OS/$CPU/debug/dist/cpp/lib:$LD_LIBRARY_PATH
 
+cd ../cpp
 make EMS
 make DMS
 
