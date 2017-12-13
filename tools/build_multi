@@ -2,32 +2,35 @@ export AJ_ROOT=$HOME/src/alljoyn
 export OS=linux
 export CPU=x86
 export LD_LIBRARY_PATH=$AJ_ROOT/build/$OS/$CPU/debug/dist/cpp/lib:$LD_LIBRARY_PATH
-
+cd ../cpp
 make EMS
 make DMS
 
 x-terminal-emulator -e bin/Debug/EMS
 
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
+x-terminal-emulator -e bin/Debug/DMS 1
+x-terminal-emulator -e bin/Debug/DMS 2
+x-terminal-emulator -e bin/Debug/DMS 3 
+x-terminal-emulator -e bin/Debug/DMS 4
+x-terminal-emulator -e bin/Debug/DMS 5
+x-terminal-emulator -e bin/Debug/DMS 6
+x-terminal-emulator -e bin/Debug/DMS 7
+x-terminal-emulator -e bin/Debug/DMS 8
+x-terminal-emulator -e bin/Debug/DMS 9
+x-terminal-emulator -e bin/Debug/DMS 10
 
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
-x-terminal-emulator -e bin/Debug/DMS
+sleep 1
+
+x-terminal-emulator -e bin/Debug/DMS 11
+x-terminal-emulator -e bin/Debug/DMS 12
+x-terminal-emulator -e bin/Debug/DMS 13
+x-terminal-emulator -e bin/Debug/DMS 14
+x-terminal-emulator -e bin/Debug/DMS 15
+x-terminal-emulator -e bin/Debug/DMS 16
+x-terminal-emulator -e bin/Debug/DMS 17
+x-terminal-emulator -e bin/Debug/DMS 18
+x-terminal-emulator -e bin/Debug/DMS 19
+x-terminal-emulator -e bin/Debug/DMS 20
+
 
 echo All done

@@ -51,8 +51,9 @@ using namespace ajn;
 
 /*constants*/
 static const char * INTF_NAME = "edu.pdx.powerlab.demo";
-static const char * SERVICE_PATH = "/asset_bess/region_1/feeder_1";
-SessionPort SERVICE_PORT = 25;
+
+static qcc::String s_advertisedName = INTF_NAME;
+
 bool done = false;
 
 
@@ -172,7 +173,7 @@ static QStatus BuildInterface(BusAttachment& bus)
  *      AllJoyn function to connect to a DBus session and populate the about
  *      properties of the asset.
 ******************************************************************************/
-static QStatus SetupBusAttachment(BusAttachment& bus, AboutData& aboutData)
+static QStatus SetupBusAttachment(BusAttachment& bus, AboutData& aboutData, SessionPort SERVICE_PORT)
 {
     QStatus status;
     status = bus.Start();
@@ -185,7 +186,7 @@ static QStatus SetupBusAttachment(BusAttachment& bus, AboutData& aboutData)
     status = BuildInterface(bus);
     QCC_ASSERT(ER_OK == status);
 
-    SessionOpts opts(SessionOpts::TRAFFIC_MESSAGES, false, SessionOpts::PROXIMITY_ANY, TRANSPORT_ANY);
+    SessionOpts opts(SessionOpts::TRAFFIC_MESSAGES, true, SessionOpts::PROXIMITY_ANY, TRANSPORT_ANY);
     bus.BindSessionPort(SERVICE_PORT, opts, g_session_port_listener);
 
     /* set up totally uninteresting about data */
@@ -237,8 +238,8 @@ class Asset : public BusObject, public BESS {
     BusAttachment& bus;
 
   public:
-    Asset(BusAttachment& bus)
-        : BusObject(SERVICE_PATH),
+    Asset(BusAttachment& bus, const char * path)
+        : BusObject(path),
         bus(bus)
     {
         const InterfaceDescription* intf = bus.GetInterface(INTF_NAME);
@@ -416,6 +417,9 @@ int CDECL_CALL main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 #endif
+    int assignment = atoi(argv[1]);
+    SessionPort SERVICE_PORT = assignment;
+    cout << SERVICE_PORT << endl;
 
     BusAttachment* bus = NULL;
     bus = new BusAttachment("Asset_provider", true);
@@ -424,17 +428,16 @@ int CDECL_CALL main(int argc, char** argv)
     AboutObj* aboutObj = new AboutObj(*bus);
     QCC_ASSERT(aboutObj != NULL);
 
-    if (ER_OK != SetupBusAttachment(*bus, aboutData)) {
+    if (ER_OK != SetupBusAttachment(*bus, aboutData, SERVICE_PORT)) {
         delete aboutObj;
         aboutObj = NULL;
         delete bus;
         bus = NULL;
         return EXIT_FAILURE;
     }
-
-    aboutObj->Announce(SERVICE_PORT, aboutData);
-
-    Asset * asset = new Asset(*bus);
+    string tempPath = "/asset_bess/region_1/feeder_" + to_string(assignment);
+    const char * SERVICE_PATH = tempPath.c_str();
+    Asset * asset = new Asset(*bus, SERVICE_PATH);
     if (ER_OK != bus->RegisterBusObject(*asset)) {
         delete asset;
     }
