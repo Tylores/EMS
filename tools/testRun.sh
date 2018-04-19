@@ -8,6 +8,10 @@ export ALLJOYN_ROOT=$ROOTPATH/alljoyn
 export AJ_ROOT=$ALLJOYN_ROOT
 export LD_LIBRARY_PATH=$AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/lib:$LD_LIBRARY_PATH
 
-#assume testRun.sh has already been ran
+#start stand-alone AllJoyn Router
+tmux new-window -d ./$AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/bin/alljoyn-daemon --config-file=./rn-config.xml
+
+#compile code and run
+make -C ../cpp
 ./../cpp/bin/Debug/EMS
 
