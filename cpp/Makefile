@@ -25,7 +25,7 @@ BIN_DIR := bin/Debug
 ALLJOYN_CPPLIB := $(ALLJOYN_DIST)/lib
 COMMON_INC := $(AJ_ROOT)/common/inc
 
-CXXFLAGS = -Wall -pipe -std=c++11 -fno-rtti -fno-exceptions -Wno-long-long -Wno-deprecated -g -DQCC_OS_LINUX -DQCC_OS_GROUP_POSIX -DQCC_DBG -m32 -DROUTER -O0 -Wno-write-strings
+CXXFLAGS = -Wall -pipe -std=c++11 -fno-rtti -fno-exceptions -Wno-long-long -Wno-deprecated -g -DQCC_OS_LINUX -DQCC_OS_GROUP_POSIX -DQCC_DBG -DROUTER -O0 -Wno-write-strings
 
 LIBS = -lstdc++ -lpthread -lalljoyn -lrt -lajrouter -lm
 
@@ -35,7 +35,7 @@ DMS: dms.o bess.o
 	mkdir -p $(BIN_DIR)
 	$(CXX) -o $(BIN_DIR)/DMS $(OBJ_DIR)/dms.o $(OBJ_DIR)/bess.o -L$(ALLJOYN_CPPLIB) $(LIBS)
 
-dms.o: dms.cc BESS.h $(ALLJOYN_CPPLIB)
+dms.o: dms.cc BESS.h $(ALLJOYN_LIB)
 	mkdir -p $(OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -I$(ALLJOYN_DIST)/inc -o $(OBJ_DIR)/$@ dms.cc
 
@@ -47,7 +47,7 @@ EMS: ems.o utility.o
 	mkdir -p $(BIN_DIR)
 	$(CXX) -o $(BIN_DIR)/EMS $(OBJ_DIR)/ems.o $(OBJ_DIR)/utility.o -L$(ALLJOYN_CPPLIB) $(LIBS)
 
-ems.o: ems.cc utility.h $(ALLJOYN_CPPLIB)
+ems.o: ems.cc utility.h $(ALLJOYN_LIB)
 	mkdir -p $(OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -I$(ALLJOYN_DIST)/inc -o $(OBJ_DIR)/$@ ems.cc
 
