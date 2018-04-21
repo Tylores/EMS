@@ -27,33 +27,21 @@ COMMON_INC := $(AJ_ROOT)/common/inc
 
 CXXFLAGS = -Wall -pipe -std=c++11 -fno-rtti -fno-exceptions -Wno-long-long -Wno-deprecated -g -DQCC_OS_LINUX -DQCC_OS_GROUP_POSIX -DQCC_DBG -O0 -Wno-write-strings
 
-LIBS = -lstdc++ -lpthread -lalljoyn -lrt -lajrouter -lm
+LIBS = -lstdc++ -lpthread -lalljoyn -lajrouter -lrt -lm
 
 default: EMS
-
-DMS: dms.o bess.o
-	mkdir -p $(BIN_DIR)
-	$(CXX) -o $(BIN_DIR)/DMS $(OBJ_DIR)/dms.o $(OBJ_DIR)/bess.o -L$(ALLJOYN_CPPLIB) $(LIBS)
-
-dms.o: dms.cc BESS.h $(ALLJOYN_LIB)
-	mkdir -p $(OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -I$(ALLJOYN_DIST)/inc -o $(OBJ_DIR)/$@ dms.cc
-
-bess.o: BESS.cc BESS.h 
-	mkdir -p $(OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $(OBJ_DIR)/$@ BESS.cc
 
 EMS: ems.o utility.o
 	mkdir -p $(BIN_DIR)
 	$(CXX) -o $(BIN_DIR)/EMS $(OBJ_DIR)/ems.o $(OBJ_DIR)/utility.o -L$(ALLJOYN_CPPLIB) $(LIBS)
 
-ems.o: ems.cc utility.h $(ALLJOYN_LIB)
+ems.o: ems.cpp utility.h $(ALLJOYN_LIB)
 	mkdir -p $(OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -I$(ALLJOYN_DIST)/inc -o $(OBJ_DIR)/$@ ems.cc
+	$(CXX) -c $(CXXFLAGS) -I$(ALLJOYN_DIST)/inc -o $(OBJ_DIR)/$@ ems.cpp
 
-utility.o: utility.cc utility.h
+utility.o: utility.cpp utility.h
 	mkdir -p $(OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $(OBJ_DIR)/$@ utility.cc
+	$(CXX) -c $(CXXFLAGS) -o $(OBJ_DIR)/$@ utility.cpp
 
 all_clean: clean
 	rmdir $(OBJ_DIR)
@@ -63,10 +51,6 @@ all_clean: clean
 	rm *.plt
 
 clean:
-	rm -f $(BIN_DIR)/DMS
-	rm -f $(OBJ_DIR)/dms.o
-	rm -f $(OBJ_DIR)/bess.o
 	rm -f $(BIN_DIR)/EMS
 	rm -f $(OBJ_DIR)/ems.o
 	rm -f $(OBJ_DIR)/utility.o
-
