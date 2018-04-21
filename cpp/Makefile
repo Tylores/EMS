@@ -25,7 +25,7 @@ BIN_DIR := bin/Debug
 ALLJOYN_CPPLIB := $(ALLJOYN_DIST)/lib
 COMMON_INC := $(AJ_ROOT)/common/inc
 
-CXXFLAGS = -Wall -pipe -std=c++11 -fno-rtti -fno-exceptions -Wno-long-long -Wno-deprecated -g -DQCC_OS_LINUX -DQCC_OS_GROUP_POSIX -DQCC_DBG -DROUTER -O0 -Wno-write-strings
+CXXFLAGS = -Wall -pipe -std=c++11 -fno-rtti -fno-exceptions -Wno-long-long -Wno-deprecated -g -DQCC_OS_LINUX -DQCC_OS_GROUP_POSIX -DQCC_DBG -O0 -Wno-write-strings
 
 LIBS = -lstdc++ -lpthread -lalljoyn -lrt -lajrouter -lm
 

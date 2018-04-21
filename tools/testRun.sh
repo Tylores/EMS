@@ -9,7 +9,13 @@ export AJ_ROOT=$ALLJOYN_ROOT
 export LD_LIBRARY_PATH=$AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/lib:$LD_LIBRARY_PATH
 
 #start stand-alone AllJoyn Router
-tmux new-window -d ./$AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/bin/alljoyn-daemon --config-file=./rn-config.xml
+tmux new-window -d $AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/bin/alljoyn-daemon --config-file=./rn-config.xml
+
+#start PC MEM/CPU log
+tmux new-window -d ./PClog.sh
+
+#start tshark for network analysis
+tmux new-window -d tshark -i br0 -w /home/tylor/dev/data/NETlog.txt
 
 #compile code and run
 make -C ../cpp
