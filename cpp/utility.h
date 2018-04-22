@@ -1,9 +1,13 @@
 #ifndef UTILITY_H
 #define UTILITY_H
-
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <map>
+#include <fstream>
+#include <sstream>
 
 using std::vector;
 using std::string;
@@ -18,6 +22,8 @@ class Utility
 	string getDateTime();
         std::map<string, string> setConfig(string t_fileName);
 	vector<string> stringDelim(string t_string, char t_delim);
+	vector<double> Aggregate(vector<vector<double>> tData);
+	vector<double> ImportSchedule(string tFileName);
     protected:
     private:
 };

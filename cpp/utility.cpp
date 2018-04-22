@@ -1,15 +1,4 @@
-#include <algorithm>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <ctime>
-#include <map>
-
 #include "utility.h"
-
 using namespace std;
 
 map<string, string> Utility::setConfig(string t_fileName)
@@ -136,3 +125,23 @@ vector<string> Utility::stringDelim(string t_string, char t_delim)
 
     return deliminated;
 } //END READ CSV
+
+vector<double> Utility:: ImportSchedule(string tFileName)
+{
+    string line;
+    vector<double> schedule;
+
+    ifstream file(tFileName.c_str());
+    if (file.is_open()){
+
+        while (getline(file,line)){
+            schedule.push_back(stod(line));
+        } //while
+
+    file.close();
+    } else {
+        cerr << "Unable to open register initialization file" << tFileName << endl;
+    } //if/else
+
+    return schedule;
+} //END IMPORT SCHEDULE

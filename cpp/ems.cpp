@@ -256,6 +256,38 @@ static void CallExportPower(BusAttachment& bus, Observer* observer, double t_wat
     }
 }
 
+
+vector<vector<double>> COllectData(int numberProperties, int numberAssets)
+{
+    
+} // END COLLECT DATA
+
+static void PJMControl(vector<double> tSchedule)
+{
+    //call collect data function
+    vector<vector<double>> telemetry;
+    //call aggregator
+    vector<doube> totals = tools.Aggregator(telemetry);
+
+    string file = "/data/PJM.txt";
+    vector<double> schedule = tools.ImportSchedule(file);
+
+    for(unsigned int i=0; i<schedule.size(); i++)
+    {
+    	auto startTime = chrono::high_resolution_clock::now();
+	//send signal function
+	cout << "This is a test signal: " << schedule[i] << endl;
+	//emulate models
+	auto endTime = chrono::high_resolution_clock::now();
+    	chrono::duration<double, milli> elapsed = startTime - endTime;
+	int wait = 2000 - elapsed.count();		// 2 seconds - processing time
+   	this_thread::sleep_for(chrono::milliseconds(wait));
+    } //for
+
+    //call collect data function
+} // END PJM CONTROL
+
+
 static bool Parse(BusAttachment& bus, Observer* observer, const string & input)
 {
     char cmd;
