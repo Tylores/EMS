@@ -1,6 +1,18 @@
 #include "utility.h"
 using namespace std;
 
+
+string Utility::GetTime()
+{
+    chrono::time_point<chrono::system_clock> time_now = chrono::system_clock::now();
+    time_t time_now_t = chrono::system_clock::to_time_t(time_now);
+    tm now_tm = *localtime(&time_now_t);
+    ostringstream ss;
+    ss << put_time(&now_tm, "%Y%m%d_%H_%M_%S");
+    return ss.str();
+} // END GET TIME
+
+
 map<string, string> Utility::setConfig(string t_fileName)
 {
     map<string, string> configMap;
@@ -71,7 +83,36 @@ void Utility::writeCSV(vector<vector<string>> t_data, string t_fileName)
         cout << "Unable to open file" << endl;
     }
 
-} //END READ CSV
+} //END WRITE CSV
+
+
+void Utility::StoreData(vector<vector<double>> tData, string tFileName)
+{
+    int ncol = tData[0].size();
+    int nrow = tData.size();
+
+    ofstream file(tFileName.c_str());
+    if(file.is_open())
+    {
+
+	for(int i=0; i<nrow; i++)
+	{
+
+	    for(int j=0; j<ncol; j++)
+	    {
+		file << tData[i][j] << ", ";
+	    } // for
+
+	    file << endl;
+	} // for
+
+    file.close();
+    } else {
+	cout << "Unable to open file\n";
+    } // if/else
+}
+
+
 
 vector<vector<string>> Utility::filterData(vector<vector<string>> t_data, string t_header, string t_criterion)
 {
@@ -126,7 +167,47 @@ vector<string> Utility::stringDelim(string t_string, char t_delim)
     return deliminated;
 } //END READ CSV
 
-vector<double> Utility:: ImportSchedule(string tFileName)
+
+vector<double> Utility::Aggregate(vector<vector<double>> tData)
+{
+    int iMax = tData.size();
+    int jMax = tData[0].size();
+    vector<double> totals;
+    totals.reserve(jMax);
+
+    double sum;
+    for(int j=0; j<jMax; j++)
+    {
+	sum = 0;
+	for(int i=0; i<iMax; i++)
+	{
+	    sum = sum + tData[i][j];
+	} // for
+
+	totals.emplace_back(sum);
+    } // for
+
+    return totals;
+} // END AGGREGATE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+vector<double> Utility::ImportSchedule(string tFileName)
 {
     string line;
     vector<double> schedule;

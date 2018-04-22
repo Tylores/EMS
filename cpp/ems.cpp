@@ -87,6 +87,13 @@ class AssetProxy {
         return status;
     }
 
+    QStatus SignalPJM(double tValue){
+	Message reply(bus);
+	MsgArg arg("d", tValue);
+	QStatus status = proxy.MethodCall(INTF_NAME, "SignalPJM", &arg, 1, 0);
+	return status;
+    } // end signal pjm
+
     void pathDelim(){
         vector <string> path, temp;
         int num;
@@ -128,11 +135,15 @@ class AssetProxy {
         }
     } // END TELEMETRY
 
-    void printTelemetry() {
+    vector<double> GetProperties() {
+	vector<double> values;
+	values.reserve(properties.size());
         for(auto it = properties.cbegin(); it != properties.cend(); ++it)
         {
-            cout << it->first << " " << it->second << endl;
+            values.emplace_back(it->second);
         }
+
+	return values;
     } // END PRINT TELEMETRY
 };
 
@@ -148,27 +159,40 @@ static void Help()
     cout << "h                  display this help message" << endl;
 }
 
-static void ListAssets(BusAttachment& bus, Observer* observer)
+unsigned int ListAssets(BusAttachment& bus, Observer* observer)
 {
     unsigned int ctr = 0;
     ProxyBusObject proxy = observer->GetFirst();
     for (; proxy.IsValid(); proxy = observer->GetNext(proxy)) {
         ctr++;
         AssetProxy asset(proxy, bus);
-        cout << proxy.GetUniqueName() << ":" << proxy.GetPath() << " number: " << ctr << endl;
-    }
+    } // for
+
+    return  ctr;
+    cout << ctr << endl;
 }
 
-static void Telemetry(BusAttachment& bus, Observer* observer)
+vector<vector<double>> Telemetry(BusAttachment& bus, Observer* observer)
 {
+    unsigned int count = ListAssets(bus, observer);
+    vector<vector<double>> assets;
+    assets.reserve(count);
+
+    vector<double> data;
     ProxyBusObject proxy = observer->GetFirst();
-    for (; proxy.IsValid(); proxy = observer->GetNext(proxy)) {
+    for (; proxy.IsValid(); proxy = observer->GetNext(proxy))
+    {
         AssetProxy asset(proxy, bus);
-        cout << proxy.GetUniqueName() << ":" << proxy.GetPath() << endl;
         asset.telemetry();
-        asset.printTelemetry();
-    }
-}
+        data = asset.GetProperties();
+	assets.emplace_back(data);
+    } //for
+
+    string file = "../data/save-";
+    file.append(tools.GetTime());
+    tools.StoreData(assets, file);
+    return assets;
+} // END TELEMETRY
 
 static void CallImportPower(BusAttachment& bus, Observer* observer, double t_watts)
 {
@@ -256,18 +280,28 @@ static void CallExportPower(BusAttachment& bus, Observer* observer, double t_wat
     }
 }
 
-
-vector<vector<double>> COllectData(int numberProperties, int numberAssets)
+static void RegD(BusAttachment& bus, Observer* observer, double tValue)
 {
-    
-} // END COLLECT DATA
+    ProxyBusObject proxy = observer->GetFirst();
+    for (; proxy.IsValid(); proxy = observer->GetNext(proxy))
+    {
+	AssetProxy asset(proxy, bus);
+	QStatus status = asset.ExportPower(tValue);
+	if (ER_OK != status){
+	    cerr << "Could not send RegD to: " << proxy.GetUniqueName() << endl;
+	   continue;
+	} // if
 
-static void PJMControl(vector<double> tSchedule)
+    } // for
+
+} // end RegD
+
+static void PJMControl(BusAttachment& bus, Observer* observer)
 {
     //call collect data function
-    vector<vector<double>> telemetry;
+    vector<vector<double>> data = Telemetry(bus, observer);
     //call aggregator
-    vector<doube> totals = tools.Aggregator(telemetry);
+    vector<double> totals = tools.Aggregate(data);
 
     string file = "/data/PJM.txt";
     vector<double> schedule = tools.ImportSchedule(file);
@@ -276,7 +310,7 @@ static void PJMControl(vector<double> tSchedule)
     {
     	auto startTime = chrono::high_resolution_clock::now();
 	//send signal function
-	cout << "This is a test signal: " << schedule[i] << endl;
+	RegD(bus, observer, schedule[i]);
 	//emulate models
 	auto endTime = chrono::high_resolution_clock::now();
     	chrono::duration<double, milli> elapsed = startTime - endTime;
@@ -285,6 +319,7 @@ static void PJMControl(vector<double> tSchedule)
     } //for
 
     //call collect data function
+    data = Telemetry(bus, observer);
 } // END PJM CONTROL
 
 
@@ -358,6 +393,11 @@ static bool Parse(BusAttachment& bus, Observer* observer, const string & input)
         option = tokens.at(1);
         TestExport(bus, observer,stod(option));
         break;
+
+    case 's':
+	PJMControl(bus, observer);
+	break;
+
     case 'h':
     default:
         Help();
@@ -379,6 +419,9 @@ static QStatus BuildInterface(BusAttachment& bus)
     assert (ER_OK == status);
 
     status = intf->AddMethod("ExportPower", "d", NULL, "watts", MEMBER_ANNOTATE_NO_REPLY);
+    assert (ER_OK == status);
+
+    status = intf->AddMethod("SignalPJM", "d", NULL, "RegD", MEMBER_ANNOTATE_NO_REPLY);
     assert (ER_OK == status);
 
     status = intf->AddProperty("import_power", "d", PROP_ACCESS_READ);

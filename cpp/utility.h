@@ -8,6 +8,8 @@
 #include <map>
 #include <fstream>
 #include <sstream>
+#include <chrono>
+#include <ctime>
 
 using std::vector;
 using std::string;
@@ -24,6 +26,8 @@ class Utility
 	vector<string> stringDelim(string t_string, char t_delim);
 	vector<double> Aggregate(vector<vector<double>> tData);
 	vector<double> ImportSchedule(string tFileName);
+	void StoreData(vector<vector<double>> tData, string tFileName);
+	string GetTime();
     protected:
     private:
 };
