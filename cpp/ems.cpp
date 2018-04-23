@@ -115,7 +115,7 @@ class AssetProxy {
 
     void telemetry() {
         properties.clear();
-        cout << "Polling asset telemetry " << endl;
+        //cout << "Polling asset telemetry " << endl;
         MsgArg dict;
 
         QStatus status = proxy.GetAllProperties(INTF_NAME, dict);
@@ -168,8 +168,8 @@ unsigned int ListAssets(BusAttachment& bus, Observer* observer)
         AssetProxy asset(proxy, bus);
     } // for
 
-    return  ctr;
     cout << ctr << endl;
+    return  ctr;
 }
 
 vector<vector<double>> Telemetry(BusAttachment& bus, Observer* observer)
@@ -188,7 +188,7 @@ vector<vector<double>> Telemetry(BusAttachment& bus, Observer* observer)
 	assets.emplace_back(data);
     } //for
 
-    string file = "../data/save-";
+    string file = "save_";
     file.append(tools.GetTime());
     tools.StoreData(assets, file);
     return assets;
@@ -286,7 +286,7 @@ static void RegD(BusAttachment& bus, Observer* observer, double tValue)
     for (; proxy.IsValid(); proxy = observer->GetNext(proxy))
     {
 	AssetProxy asset(proxy, bus);
-	QStatus status = asset.ExportPower(tValue);
+	QStatus status = asset.SignalPJM(tValue);
 	if (ER_OK != status){
 	    cerr << "Could not send RegD to: " << proxy.GetUniqueName() << endl;
 	   continue;
@@ -303,7 +303,7 @@ static void PJMControl(BusAttachment& bus, Observer* observer)
     //call aggregator
     vector<double> totals = tools.Aggregate(data);
 
-    string file = "/data/PJM.txt";
+    string file = "PJM.txt";
     vector<double> schedule = tools.ImportSchedule(file);
 
     for(unsigned int i=0; i<schedule.size(); i++)

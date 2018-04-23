@@ -10,8 +10,8 @@ export LD_LIBRARY_PATH=$AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/lib:$LD_LIBRA
 
 #run alljoyn router
 killall alljoyn-daemon
-sleep 1
-$AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/bin/alljoyn-daemon --config-file=./rn-config.xml &
+sleep 3
+$AJ_ROOT/build/linux/$CPU/$VARIANT/dist/cpp/bin/alljoyn-daemon --config-file=./rn-config.xml > /dev/null 2>&1 &
 
 #run app
 make -C ../cpp
