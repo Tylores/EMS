@@ -303,7 +303,7 @@ static void PJMControl(BusAttachment& bus, Observer* observer)
     //call aggregator
     vector<double> totals = tools.Aggregate(data);
 
-    string file = "PJM.txt";
+    string file = "samplePJM.txt";
     vector<double> schedule = tools.ImportSchedule(file);
 
     for(unsigned int i=0; i<schedule.size(); i++)
